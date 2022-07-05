@@ -2,9 +2,9 @@ package ytservice
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
-	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/manosriram/youtubeAPI-fampay/data"
@@ -12,7 +12,7 @@ import (
 	config "github.com/manosriram/youtubeAPI-fampay/pkg/config"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
-	"google.golang.org/api/googleapi/transport"
+	option "google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -25,52 +25,54 @@ var (
 	predefinedQuery = "football"
 )
 
-func printIDs(sectionName string, matches map[string]string) {
-	fmt.Printf("%v:\n", sectionName)
-	fmt.Println(matches)
-	for id, title := range matches {
-		fmt.Printf("[%v] %v\n", id, title)
+func getMetadataFromYoutube(logger *zap.SugaredLogger, config *config.Config, query string) (*youtube.SearchListResponse, error) {
+	keys := config.YoutubeApiKeys
+	for _, key := range keys {
+		youtubeClient, err := youtube.NewService(context.TODO(), option.WithAPIKey(key))
+		if err != nil {
+			continue
+		}
+		call := youtubeClient.Search.List([]string{"id,snippet"}).
+			Q(query).
+			MaxResults(*maxResults).
+			Order("date").
+			Type("video").
+			PublishedAfter("2020-01-01T00:00:00Z")
+
+		response, err := call.Do()
+		if err != nil {
+			continue
+		}
+
+		logger.Infow("got video metadata from youtube")
+		return response, nil
 	}
-	fmt.Printf("\n\n")
+	return nil, errors.New("invalid api key(s)")
 }
 
 // Fetches video(s) metadata from YouTube and stores in DB
-func FetchVideosByQuery(logger *zap.SugaredLogger, config config.Config, query string, mongoCollection *mongo.Collection) error {
-	client := &http.Client{
-		Transport: &transport.APIKey{Key: config.YoutubeDeveloperKey},
-	}
-
-	youtubeClient, err := youtube.New(client)
+func FetchVideosByQuery(logger *zap.SugaredLogger, config *config.Config, query string, mongoCollection *mongo.Collection) error {
+	response, err := getMetadataFromYoutube(logger, config, query)
 	if err != nil {
-		logger.Errorw("error creating youtube client", "error", err)
-		return err
-	}
-	call := youtubeClient.Search.List([]string{"id,snippet"}).
-		Q(query).
-		MaxResults(*maxResults)
-	response, err := call.Do()
-	if err != nil {
-		logger.Errorw("error calling youtube search API", "error", err)
+		logger.Errorw("error getting video metadata from youtube", "error", err)
 		return err
 	}
 
 	videosList := []data.Video{}
 
 	for _, item := range response.Items {
-		switch item.Id.Kind {
-		case "youtube#video":
-			newVideoId := uuid.New()
-			newVideo := data.Video{
-				Id:           newVideoId,
-				Title:        item.Snippet.Title,
-				Description:  item.Snippet.Description,
-				PublishedAt:  item.Snippet.PublishedAt,
-				ThumbnailUrl: item.Snippet.Thumbnails.Default.Url,
-				VideoETag:    item.Etag,
-			}
-			videosList = append(videosList, newVideo)
+		newVideoId := uuid.New()
+		newVideo := data.Video{
+			Id:           newVideoId,
+			Title:        item.Snippet.Title,
+			Description:  item.Snippet.Description,
+			PublishedAt:  item.Snippet.PublishedAt,
+			ThumbnailUrl: item.Snippet.Thumbnails.Default.Url,
+			VideoETag:    item.Etag,
 		}
+		videosList = append(videosList, newVideo)
 	}
+
 	err = db.BulkUpsertVideos(context.TODO(), logger, videosList, mongoCollection)
 	if err != nil {
 		logger.Errorw("error bulk upserting videos", "error", err)
@@ -80,15 +82,10 @@ func FetchVideosByQuery(logger *zap.SugaredLogger, config config.Config, query s
 	return nil
 }
 
-func (svc Service) LoadStoredVideos(ctx context.Context, logger *zap.SugaredLogger, mongoCollection *mongo.Collection) ([]*data.Video, error) {
-	videos, err := db.GetVideosList(ctx, logger, mongoCollection)
+func (svc Service) LoadStoredVideos(ctx context.Context, showVideoRequest data.ShowVideoRequest, logger *zap.SugaredLogger, mongoCollection *mongo.Collection) ([]*data.Video, error) {
+	videos, err := db.GetVideosList(ctx, showVideoRequest, logger, mongoCollection)
 	if err != nil {
 		return nil, err
 	}
-	// FetchVideosByQuery(logger, predefinedQuery, mongoCollection)
 	return videos, nil
-}
-
-func (svc Service) LoadStoredVideosByQuery(ctx context.Context) error {
-	return nil
 }

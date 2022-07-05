@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -17,7 +16,7 @@ import (
 
 const PORT = ":5001"
 
-func refreshVideoList(logger *zap.SugaredLogger, config config.Config, collection *mongo.Collection) {
+func refreshVideoList(logger *zap.SugaredLogger, config *config.Config, collection *mongo.Collection) {
 	ticker := time.NewTicker(2 * time.Second)
 	quit := make(chan struct{})
 	go func() {
@@ -48,7 +47,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(config.YoutubeDeveloperKey)
 
 	collection, err := db.ConnectMongo(sugar)
 	if err != nil {
@@ -57,13 +55,18 @@ func main() {
 		sugar.Infow("connected to mongo")
 	}
 
+	youtubeService := ytservice.Service{
+		Config: &config,
+	}
+
 	youtubeApi := api.YoutubeAPI{
 		Config:          &config,
 		MongoCollection: collection,
+		YoutubeService:  youtubeService,
 		Logger:          sugar,
 	}
 
-	// go refreshVideoList(sugar, config, collection)
+	// go refreshVideoList(sugar, &config, collection)
 
 	errorHandler := api.ProvideAPIWrap(sugar)
 

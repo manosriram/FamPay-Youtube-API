@@ -2,14 +2,18 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/manosriram/youtubeAPI-fampay/data"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 )
+
+const VideosPerPage = 5
 
 func ConnectMongo(logger *zap.SugaredLogger) (*mongo.Collection, error) {
 	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
@@ -33,7 +37,7 @@ func BulkUpsertVideos(ctx context.Context, logger *zap.SugaredLogger, videos []d
 		operation := mongo.NewUpdateOneModel()
 		operation.SetUpsert(true)
 		operation.SetFilter(bson.M{"video_etag": video.VideoETag})
-		operation.SetUpdate(bson.M{"$set": bson.M{"title": video.Title, "description": video.Description, "thumbnail_url": video.ThumbnailUrl}})
+		operation.SetUpdate(bson.M{"$set": bson.M{"title": video.Title, "description": video.Description, "thumbnail_url": video.ThumbnailUrl, "published_at": video.PublishedAt}})
 
 		operations = append(operations, operation)
 	}
@@ -49,12 +53,31 @@ func BulkUpsertVideos(ctx context.Context, logger *zap.SugaredLogger, videos []d
 	return nil
 }
 
-func GetVideosList(ctx context.Context, logger *zap.SugaredLogger, mongoCollection *mongo.Collection) ([]*data.Video, error) {
+func GetVideosList(ctx context.Context, showVideoRequest data.ShowVideoRequest, logger *zap.SugaredLogger, mongoCollection *mongo.Collection) ([]*data.Video, error) {
 	videoList := make([]*data.Video, 0)
+
+	var (
+		page        = showVideoRequest.Page
+		searchQuery = showVideoRequest.SearchQuery
+	)
 
 	filter := bson.M{}
 
-	cursor, err := mongoCollection.Find(ctx, filter)
+	if searchQuery != "" {
+		filter = bson.M{"$or": []bson.M{
+			{"title": primitive.Regex{Pattern: fmt.Sprintf("%s", searchQuery), Options: "i"}},
+			{"description": primitive.Regex{Pattern: fmt.Sprintf("%s", searchQuery), Options: "i"}},
+		},
+		}
+	}
+
+	findOptions := &options.FindOptions{}
+	findOptions.SetSort(bson.M{"published_at": -1})
+
+	findOptions.SetSkip(int64((page - 1) * VideosPerPage))
+	findOptions.SetLimit(4)
+
+	cursor, err := mongoCollection.Find(ctx, filter, findOptions)
 	if err != nil {
 		return nil, err
 	}

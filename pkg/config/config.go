@@ -1,15 +1,17 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+)
 
 type Config struct {
-	YoutubeDeveloperKey string `mapstructure:"YOUTUBE_DEVELOPER_KEY" validate:"required"`
+	YoutubeApiKeys []string `mapstructure:"YOUTUBE_DEVELOPER_KEY" validate:"required"`
 }
 
 func Load(path string) (Config, error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("config")
-	viper.SetConfigType("env")
+	viper.SetConfigType("yaml")
 
 	viper.AutomaticEnv()
 
