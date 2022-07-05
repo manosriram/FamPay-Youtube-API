@@ -29,6 +29,12 @@ func NewYouTubeAPI(logger *zap.SugaredLogger, config *config.Config, youtubeServ
 	}
 }
 
+/*
+   method: GET
+   params: page
+   description: loads video(s) metadata from db and returns an json array
+
+*/
 func (yt YoutubeAPI) LoadStoredVideos(ctx *gin.Context) (int, interface{}, error) {
 	logger := yt.Logger
 
@@ -52,6 +58,13 @@ func (yt YoutubeAPI) LoadStoredVideos(ctx *gin.Context) (int, interface{}, error
 	return http.StatusOK, gin.H{"success": true, "videos": videos}, nil
 }
 
+/*
+    method: GET
+    params: page, search
+    description: loads video(s) matching the query metadata from db and returns an json array.
+		 supports partial matching on fields - title and description
+
+*/
 func (yt YoutubeAPI) LoadStoredVideosByQuery(ctx *gin.Context) (int, interface{}, error) {
 	logger := yt.Logger
 

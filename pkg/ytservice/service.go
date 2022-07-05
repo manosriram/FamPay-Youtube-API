@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/manosriram/youtubeAPI-fampay/data"
 	"github.com/manosriram/youtubeAPI-fampay/db"
 	config "github.com/manosriram/youtubeAPI-fampay/pkg/config"
@@ -50,7 +49,12 @@ func getMetadataFromYoutube(logger *zap.SugaredLogger, config *config.Config, qu
 	return nil, errors.New("invalid api key(s)")
 }
 
-// Fetches video(s) metadata from YouTube and stores in DB
+/*
+   fetches videos metadata from youtube with the predefinedQuery in descending order of published date and stores it in DB.
+   supports multiple API keys, picks up the first valid key.
+   bulk inserts the video array into DB.
+*/
+
 func FetchVideosByQuery(logger *zap.SugaredLogger, config *config.Config, query string, mongoCollection *mongo.Collection) error {
 	response, err := getMetadataFromYoutube(logger, config, query)
 	if err != nil {
@@ -61,9 +65,7 @@ func FetchVideosByQuery(logger *zap.SugaredLogger, config *config.Config, query 
 	videosList := []data.Video{}
 
 	for _, item := range response.Items {
-		newVideoId := uuid.New()
 		newVideo := data.Video{
-			Id:           newVideoId,
 			Title:        item.Snippet.Title,
 			Description:  item.Snippet.Description,
 			PublishedAt:  item.Snippet.PublishedAt,
@@ -82,6 +84,10 @@ func FetchVideosByQuery(logger *zap.SugaredLogger, config *config.Config, query 
 	return nil
 }
 
+/*
+   service which fetches videos metadata from DB and returns the array.
+   returns results matching the query if query is specified.
+*/
 func (svc Service) LoadStoredVideos(ctx context.Context, showVideoRequest data.ShowVideoRequest, logger *zap.SugaredLogger, mongoCollection *mongo.Collection) ([]*data.Video, error) {
 	videos, err := db.GetVideosList(ctx, showVideoRequest, logger, mongoCollection)
 	if err != nil {
