@@ -41,7 +41,7 @@ func (yt YoutubeAPI) LoadStoredVideos(ctx *gin.Context) (int, interface{}, error
 	page, err := strconv.Atoi(ctx.Query("page"))
 	if err != nil {
 		logger.Errorw("error getting page query", "error", err)
-		return http.StatusInternalServerError, gin.H{"success": false}, err
+		return http.StatusInternalServerError, gin.H{"success": false, "error": "error getting page"}, err
 	}
 
 	showVideoRequest := data.ShowVideoRequest{
@@ -52,10 +52,10 @@ func (yt YoutubeAPI) LoadStoredVideos(ctx *gin.Context) (int, interface{}, error
 	videos, err := yt.YoutubeService.LoadStoredVideos(ctx, showVideoRequest, yt.Logger, yt.MongoCollection)
 	if err != nil {
 		logger.Errorw("error getting videos list", "error", err)
-		return http.StatusInternalServerError, gin.H{"success": false}, err
+		return http.StatusInternalServerError, gin.H{"success": false, "error": "error loading videos"}, err
 	}
 
-	return http.StatusOK, gin.H{"success": true, "videos": videos}, nil
+	return http.StatusOK, gin.H{"success": true, "videos": videos, "error": ""}, nil
 }
 
 /*
@@ -71,7 +71,7 @@ func (yt YoutubeAPI) LoadStoredVideosByQuery(ctx *gin.Context) (int, interface{}
 	page, err := strconv.Atoi(ctx.Query("page"))
 	if err != nil {
 		logger.Errorw("error getting page query", "error", err)
-		return http.StatusInternalServerError, gin.H{"success": false}, err
+		return http.StatusInternalServerError, gin.H{"success": false, "error": "error getting page"}, err
 	}
 
 	searchQuery := ctx.Query("search")
@@ -84,8 +84,8 @@ func (yt YoutubeAPI) LoadStoredVideosByQuery(ctx *gin.Context) (int, interface{}
 	videos, err := yt.YoutubeService.LoadStoredVideos(ctx, showVideoRequest, yt.Logger, yt.MongoCollection)
 	if err != nil {
 		logger.Errorw("error getting videos list", "error", err)
-		return http.StatusInternalServerError, gin.H{"success": false}, err
+		return http.StatusInternalServerError, gin.H{"success": false, "error": "error loading videos"}, err
 	}
 
-	return http.StatusOK, gin.H{"success": true, "videos": videos}, nil
+	return http.StatusOK, gin.H{"success": true, "videos": videos, "error": ""}, nil
 }
