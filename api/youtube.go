@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -75,6 +76,10 @@ func (yt YoutubeAPI) LoadStoredVideosByQuery(ctx *gin.Context) (int, interface{}
 	}
 
 	searchQuery := ctx.Query("search")
+	if searchQuery == "" {
+		logger.Errorw("search query empty")
+		return http.StatusInternalServerError, gin.H{"success": false, "error": "search query empty"}, errors.New("search query empty")
+	}
 
 	showVideoRequest := data.ShowVideoRequest{
 		Page:        int64(page),
