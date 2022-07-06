@@ -18,7 +18,7 @@
 
 ##### Response Format
 
-`{ "success": boolean, "videos": []string }`
+`{ "success": boolean, "videos": []string, "error": string }`
 
 # Functionalities
 

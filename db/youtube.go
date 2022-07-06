@@ -21,7 +21,7 @@ const (
 )
 
 /*
-   connects to mongodb cloud and returns the collection
+   connects to mongodb and returns the collection
 */
 func ConnectMongo(logger *zap.SugaredLogger, config config.Config) (*mongo.Collection, error) {
 	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
@@ -74,7 +74,7 @@ func BulkUpsertVideos(ctx context.Context, logger *zap.SugaredLogger, videos []d
 }
 
 /*
-   fetches video list from mongodb cloud.
+   fetches video list from mongodb.
    supports pagination and search query.
 */
 func GetVideosList(ctx context.Context, showVideoRequest data.ShowVideoRequest, logger *zap.SugaredLogger, mongoCollection *mongo.Collection) ([]*data.Video, error) {

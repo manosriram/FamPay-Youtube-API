@@ -9,6 +9,7 @@ type Config struct {
 	MongoURI       string   `mapstructure:"MONGO_URI" validate:"required"`
 }
 
+// Loads config.yaml into config.Config
 func Load(path string) (Config, error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("config")

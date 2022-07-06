@@ -24,6 +24,10 @@ var (
 	predefinedQuery = "football"
 )
 
+/*
+   pings youtube for video with search query, uses available API keys.
+   picks the first valid API key.
+*/
 func getMetadataFromYoutube(logger *zap.SugaredLogger, config *config.Config, query string) (*youtube.SearchListResponse, error) {
 	keys := config.YoutubeApiKeys
 	for _, key := range keys {

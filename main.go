@@ -51,7 +51,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// connect to mongodb service (cloud)
+	// connect to mongodb service
 	collection, err := db.ConnectMongo(sugar, config)
 	if err != nil {
 		sugar.Errorw("error connecting to mongo", "error", err)
