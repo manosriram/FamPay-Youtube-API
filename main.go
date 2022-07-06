@@ -55,6 +55,7 @@ func main() {
 	collection, err := db.ConnectMongo(sugar, config)
 	if err != nil {
 		sugar.Errorw("error connecting to mongo", "error", err)
+		return
 	} else {
 		sugar.Infow("connected to mongo")
 	}

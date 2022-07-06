@@ -6,8 +6,7 @@ import (
 
 type Config struct {
 	YoutubeApiKeys []string `mapstructure:"YOUTUBE_DEVELOPER_KEY" validate:"required"`
-	MongoUsername  string   `mapstructure:"MONGO_USERNAME" validate:"required"`
-	MongoPassword  string   `mapstructure:"MONGO_PASSWORD" validate:"required"`
+	MongoURI       string   `mapstructure:"MONGO_URI" validate:"required"`
 }
 
 func Load(path string) (Config, error) {

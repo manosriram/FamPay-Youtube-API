@@ -1,6 +1,6 @@
-### youtube-go-api
+### fampay-youtube-go-api
 
-`Go server which pulls videos metadata from youtube and stores it in DB.`
+##### Make an API to fetch latest videos sorted in reverse chronological order of their publishing date-time from YouTube for a given tag/search query in a paginated response.
 
 # APIS
 
@@ -25,17 +25,14 @@
 
 # Database
 
-This server uses a MongoDB service. You can create one [here](https://www.mongodb.com/atlas/database). When the server starts, it connects to the URI with username and password provided in `config.yaml`
+This server uses MongoDB. To handle search queries, we have 2 text indexes (compound index) on title and description fields.
 
 # Config file
 
 Create a `config.yaml` at the root path with the following template:
 
 ```
-MONGO_USERNAME:
-    username
-MONGO_PASSWORD:
-    password
+MONGO_URI: mongo_uri_here
 YOUTUBE_API_KEY:
     - api_key_from_google1
     - api_key_from_google2

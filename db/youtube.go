@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/manosriram/youtubeAPI-fampay/data"
@@ -25,11 +25,12 @@ const (
 func ConnectMongo(logger *zap.SugaredLogger, config config.Config) (*mongo.Collection, error) {
 	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
 
-	mongoURI := fmt.Sprintf("mongodb+srv://%s:%s@youtube-api-fampay.g7ssryz.mongodb.net/?retryWrites=true&w=majority", config.MongoUsername, config.MongoPassword)
-	fmt.Println(mongoURI)
+	if config.MongoURI == "" {
+		return nil, errors.New("MongoURI empty")
+	}
 
 	clientOptions := options.Client().
-		ApplyURI(mongoURI).
+		ApplyURI(config.MongoURI).
 		SetServerAPIOptions(serverAPIOptions)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
