@@ -68,6 +68,7 @@ func FetchVideosByQuery(logger *zap.SugaredLogger, config *config.Config, query 
 
 	videosList := []data.Video{}
 
+	// Create a list of videos metadata to upsert
 	for _, item := range response.Items {
 		newVideo := data.Video{
 			Title:        item.Snippet.Title,
