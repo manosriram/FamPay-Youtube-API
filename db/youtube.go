@@ -8,6 +8,7 @@ import (
 	"github.com/manosriram/youtubeAPI-fampay/data"
 	"github.com/manosriram/youtubeAPI-fampay/pkg/config"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -88,8 +89,9 @@ func GetVideosList(ctx context.Context, showVideoRequest data.ShowVideoRequest, 
 
 	// if searchQuery isn't empty, do partial search on title and description
 	if searchQuery != "" {
-		filter = bson.M{"$and": []bson.M{
-			{"$text": bson.M{"$search": searchQuery}},
+		filter = bson.M{"$or": []bson.M{
+			{"title": primitive.Regex{Pattern: searchQuery, Options: "i"}},
+			{"description": primitive.Regex{Pattern: searchQuery, Options: "i"}},
 		},
 		}
 	}
