@@ -16,9 +16,9 @@ import (
 
 const PORT = ":5001"
 
-// function which calls FetchVideosByQuery(...) every 10seconds
+// function which calls FetchVideosByQuery(...) every 30 seconds
 func refreshVideoList(logger *zap.SugaredLogger, config *config.Config, collection *mongo.Collection) {
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(30 * time.Second)
 	quit := make(chan struct{})
 	go func() {
 		for {
@@ -26,6 +26,7 @@ func refreshVideoList(logger *zap.SugaredLogger, config *config.Config, collecti
 			case <-ticker.C:
 				logger.Infow("loading video list")
 				ytservice.FetchVideosByQuery(logger, config, "football", collection)
+
 			case <-quit:
 				ticker.Stop()
 				return
@@ -73,7 +74,8 @@ func main() {
 		Logger:          sugar,
 	}
 
-	// go refreshVideoList(sugar, &config, collection)
+	// go routine to pull videos metadata from youtube
+	go refreshVideoList(sugar, &config, collection)
 
 	// error handler which intercepts response
 	errorHandler := api.ProvideAPIWrap(sugar)

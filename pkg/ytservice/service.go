@@ -20,7 +20,7 @@ type Service struct {
 }
 
 var (
-	maxResults      = flag.Int64("max-results", 6, "Max YouTube results")
+	maxResults      = flag.Int64("max-results", 25, "Max YouTube results")
 	predefinedQuery = "football"
 )
 
